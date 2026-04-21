@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "render:start": "node scripts/render-start.mjs",
     "seed": "npx tsx --env-file=.env.local scripts/seed.ts",
     "market:sync": "npx tsx --env-file=.env.local scripts/sync-market-prices.ts",
     "db:push": "npx prisma db push",

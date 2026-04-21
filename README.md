@@ -1,3 +1,17 @@
+# Construction Budget (Render Ready)
+
+可直接用 Render Blueprints 部署：
+
+- [Deploy on Render](https://render.com/deploy?repo=https://github.com/max-edtech/stem-insight-mvp-demo)
+
+部署設定已包含於 [`render.yaml`](./render.yaml)：
+
+- Next.js 16 Web Service
+- SQLite persistent disk (`/var/data/dev.db`)
+- 啟動時自動 `prisma db push`
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
