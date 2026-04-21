@@ -5,9 +5,11 @@ services:
     plan: starter
     branch: main
     autoDeploy: true
-    buildCommand: npm ci && npx prisma generate && npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm run render:start
     envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
