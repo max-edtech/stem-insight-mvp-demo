@@ -7,8 +7,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "npx prisma generate && next build",
+    "start": "node scripts/render-start.mjs",
     "render:start": "node scripts/render-start.mjs",
     "seed": "npx tsx --env-file=.env.local scripts/seed.ts",
     "market:sync": "npx tsx --env-file=.env.local scripts/sync-market-prices.ts",
