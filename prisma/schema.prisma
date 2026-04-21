@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id                 String    @id @default(uuid())
+  name               String
+  totalArea          Float?    @map("total_area")
+  unitCost           Float?    @map("unit_cost")
+  expectedSalesPrice Float?    @map("expected_sales_price")
+  contractAmount     Float     @default(0) @map("contract_amount")
+  targetProfitRate   Float     @default(0.15) @map("target_profit_rate")
+  totalBudget        Float     @default(0) @map("total_budget")
+  parameterSnapshot  String?   @map("parameter_snapshot")
+  riskSimulation     String?   @map("risk_simulation")
+  totalDays          Int?      @map("total_days")
+  startDate          DateTime? @map("start_date")
+  endDate            DateTime? @map("end_date")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  budgetCodes      BudgetCode[]
+  costItems        CostItem[]
+  budgetLines      BudgetLine[]
+  actualValuations ActualValuation[]
+  scheduleItems    ScheduleItem[]
+  cashflowEntries  CashflowEntry[]
+  changeOrders     ChangeOrder[]
+  taxScenarios     TaxScenario[]
+  profitImpacts    ProjectProfitImpact[]
+  acceptanceReview AcceptanceReview?
+
+  @@map("projects")
+}
+
+model AcceptanceReview {
+  id             String    @id @default(uuid())
+  projectId      String    @unique @map("project_id")
+  meetingDate    DateTime? @map("meeting_date")
+  ownerName      String?   @map("owner_name")
+  reviewerName   String?   @map("reviewer_name")
+  decision       String    @default("revise")
+  feasibilityPass Boolean  @default(false) @map("feasibility_pass")
+  changePass     Boolean   @default(false) @map("change_pass")
+  variancePass   Boolean   @default(false) @map("variance_pass")
+  cashflowPass   Boolean   @default(false) @map("cashflow_pass")
+  taxPass        Boolean   @default(false) @map("tax_pass")
+  exportPass     Boolean   @default(false) @map("export_pass")
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([decision])
+  @@map("acceptance_reviews")
+}
+
+model MarketSnapshot {
+  id            String    @id @default(uuid())
+  seriesKey     String    @map("series_key")
+  seriesLabel   String    @map("series_label")
+  period        String
+  gregorianYear Int       @map("gregorian_year")
+  month         Int
+  value         Float
+  momChangePct  Float?    @map("mom_change_pct")
+  yoyChangePct  Float?    @map("yoy_change_pct")
+  sourceUrl     String?   @map("source_url")
+  sourceType    String    @default("official_index") @map("source_type")
+  fetchedAt     DateTime  @default(now()) @map("fetched_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  alerts MarketAlert[]
+
+  @@unique([seriesKey, period])
+  @@index([seriesKey, gregorianYear, month])
+  @@map("market_snapshots")
+}
+
+model MarketAlert {
+  id           String    @id @default(uuid())
+  seriesKey    String    @map("series_key")
+  period       String
+  thresholdPct Float     @map("threshold_pct")
+  changePct    Float     @map("change_pct")
+  direction    String
+  status       String    @default("active")
+  snapshotId   String?   @map("snapshot_id")
+  sourceUrl    String?   @map("source_url")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  snapshot MarketSnapshot?    @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  impacts  ProjectProfitImpact[]
+
+  @@unique([seriesKey, period, thresholdPct])
+  @@index([seriesKey, period])
+  @@index([status])
+  @@map("market_alerts")
+}
+
+model ProjectProfitImpact {
+  id                String   @id @default(uuid())
+  projectId         String   @map("project_id")
+  alertId           String   @map("alert_id")
+  seriesKey         String   @map("series_key")
+  period            String
+  costDelta         Float    @map("cost_delta")
+  indirectDelta     Float    @map("indirect_delta")
+  totalDelta        Float    @map("total_delta")
+  projectedProfit   Float    @map("projected_profit")
+  projectedProfitRate Float  @map("projected_profit_rate")
+  triggeredAt       DateTime @default(now()) @map("triggered_at")
+
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  alert   MarketAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, alertId])
+  @@index([projectId, triggeredAt])
+  @@index([alertId])
+  @@map("project_profit_impacts")
+}
+
+model BudgetCode {
+  id           String @id @default(uuid())
+  projectId    String @map("project_id")
+  code         String
+  name         String
+  mainCategory String @map("main_category")
+  subCategory  String @map("sub_category")
+
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  budgetLines      BudgetLine[]
+  actualValuations ActualValuation[]
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([mainCategory])
+  @@map("budget_codes")
+}
+
+model CostItem {
+  id                String   @id @default(uuid())
+  projectId         String   @map("project_id")
+  itemCode          String   @map("item_code")
+  itemName          String   @map("item_name")
+  unit              String?
+  costType          String?  @map("cost_type")
+  tradeCode         String?  @map("trade_code")
+  tradeName         String?  @map("trade_name")
+  cashPct           Float?   @map("cash_pct")
+  notePct           Float?   @map("note_pct")
+  noteDays          Int?     @map("note_days")
+  depositPct        Float?   @map("deposit_pct")
+  depositNoteMonths Int?     @map("deposit_note_months")
+  retentionPct      Float?   @map("retention_pct")
+  retentionRelease  String?  @map("retention_release")
+  compositeCode     String?  @map("composite_code")
+
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  budgetLines      BudgetLine[]
+  actualValuations ActualValuation[]
+
+  @@unique([projectId, itemCode, compositeCode])
+  @@index([projectId])
+  @@index([itemCode])
+  @@index([costType])
+  @@map("cost_items")
+}
+
+model BudgetLine {
+  id           String   @id @default(uuid())
+  projectId    String   @map("project_id")
+  budgetCodeId String   @map("budget_code_id")
+  costItemId   String?  @map("cost_item_id")
+  budgetCode   String   @map("budget_code")
+  itemCode     String?  @map("item_code")
+  itemName     String   @map("item_name")
+  unit         String?
+  unitUsage    Float?   @map("unit_usage")
+  quantity     Float?   
+  unitPrice    Float?   @map("unit_price")
+  lineTotal    Float?   @map("line_total")
+  budgetTotal  Float?   @map("budget_total")
+  remark       String?
+  isSummary    Boolean  @default(false) @map("is_summary")
+  sortOrder    Int?     @map("sort_order")
+
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  budgetCodeR BudgetCode @relation(fields: [budgetCodeId], references: [id])
+  costItem    CostItem?  @relation(fields: [costItemId], references: [id])
+
+  @@index([projectId])
+  @@index([budgetCodeId])
+  @@index([costItemId])
+  @@map("budget_lines")
+}
+
+model ActualValuation {
+  id           String   @id @default(uuid())
+  projectId    String   @map("project_id")
+  budgetCodeId String   @map("budget_code_id")
+  costItemId   String?  @map("cost_item_id")
+  budgetCode   String   @map("budget_code")
+  itemCode     String?  @map("item_code")
+  itemName     String   @map("item_name")
+  unit         String?
+  quantity     Float?   
+  unitPrice    Float?   @map("unit_price")
+  amount       Float?   
+  budgetRatio  Float?   @map("budget_ratio")
+  remark       String?
+  sortOrder    Int?     @map("sort_order")
+
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  budgetCodeR BudgetCode @relation(fields: [budgetCodeId], references: [id])
+  costItem    CostItem?  @relation(fields: [costItemId], references: [id])
+
+  @@index([projectId])
+  @@index([budgetCodeId])
+  @@map("actual_valuations")
+}
+
+model ScheduleItem {
+  id            String    @id @default(uuid())
+  projectId     String    @map("project_id")
+  itemCode      String?   @map("item_code")
+  milestoneName String    @map("milestone_name")
+  milestoneDate DateTime? @map("milestone_date")
+  durationDays  Int?      @map("duration_days")
+  startDate     DateTime? @map("start_date")
+  endDate       DateTime? @map("end_date")
+  remark        String?
+  sortOrder     Int?      @map("sort_order")
+
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  cashflowEntries CashflowEntry[]
+
+  @@index([projectId])
+  @@map("schedule_items")
+}
+
+model CashflowEntry {
+  id              String    @id @default(uuid())
+  projectId       String    @map("project_id")
+  scheduleItemId  String?   @map("schedule_item_id")
+  itemCode        String?   @map("item_code")
+  itemName        String?   @map("item_name")
+  mainCategory    String?   @map("main_category")
+  subCategory     String?   @map("sub_category")
+  amount          Float?    
+  durationDays    Int?      @map("duration_days")
+  startDate       DateTime? @map("start_date")
+  endDate         DateTime? @map("end_date")
+  cashAmount      Float?    @map("cash_amount")
+  noteStartDate   DateTime? @map("note_start_date")
+  noteEndDate     DateTime? @map("note_end_date")
+  noteAmount      Float?    @map("note_amount")
+  depositDate     DateTime? @map("deposit_date")
+  depositAmount   Float?    @map("deposit_amount")
+  retentionDate   DateTime? @map("retention_date")
+  retentionAmount Float?    @map("retention_amount")
+  note            String?
+  sortOrder       Int?      @map("sort_order")
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scheduleItem ScheduleItem? @relation(fields: [scheduleItemId], references: [id])
+
+  @@index([projectId])
+  @@map("cashflow_entries")
+}
+
+model ChangeOrder {
+  id            String    @id @default(uuid())
+  projectId     String    @map("project_id")
+  orderNo       String    @map("order_no")
+  title         String
+  deltaAmount   Float     @map("delta_amount")
+  status        String    @default("pending")
+  approvedAt    DateTime? @map("approved_at")
+  note          String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@map("change_orders")
+}
+
+model TaxScenario {
+  id             String    @id @default(uuid())
+  projectId      String    @map("project_id")
+  title          String
+  taxableProfit  Float     @map("taxable_profit")
+  taxRate        Float     @map("tax_rate")
+  estimatedTax   Float     @map("estimated_tax")
+  status         String    @default("draft")
+  note           String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@map("tax_scenarios")
+}
