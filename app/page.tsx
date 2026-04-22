@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { formatAmount, formatDate } from "@/lib/formatters";
 import {
   ArrowRight,
+  BookOpenCheck,
   Building2,
   CalendarDays,
   ChevronRight,
@@ -118,6 +119,13 @@ export default async function HomePage() {
                 >
                   看前期試算
                   <ChevronRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/guide"
+                  className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-300/10 px-5 py-3 text-sm font-semibold text-emerald-100 transition-transform hover:-translate-y-0.5"
+                >
+                  父親操作指南
+                  <BookOpenCheck className="h-4 w-4" />
                 </Link>
               </div>
             </div>
