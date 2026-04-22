@@ -124,7 +124,7 @@ export default async function HomePage() {
                   href="/guide"
                   className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-300/10 px-5 py-3 text-sm font-semibold text-emerald-100 transition-transform hover:-translate-y-0.5"
                 >
-                  父親操作指南
+                  操作指南
                   <BookOpenCheck className="h-4 w-4" />
                 </Link>
               </div>

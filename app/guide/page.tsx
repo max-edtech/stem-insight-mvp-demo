@@ -77,7 +77,7 @@ export default async function GuidePage() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-950 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
               <ListChecks className="h-3.5 w-3.5" />
-              父親操作指南
+              操作指南
             </span>
             {latestProject && (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -90,7 +90,7 @@ export default async function GuidePage() {
             一條連結就能操作：照 1 → 2 → 3 → 4 走完即可
           </h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            傳這頁連結給父親即可。每一步都有按鈕，點進去照頁面指示完成，不需要記公式。
+            傳這頁連結給任何使用者即可。每一步都有按鈕，點進去照頁面指示完成，不需要記公式。
           </p>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
